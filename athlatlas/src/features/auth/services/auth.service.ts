@@ -6,16 +6,22 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+  username: string;
+  confirmPassword: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: {
     id: string;
     email: string;
-    name?: string;
+    name: string;
   };
 }
 
-// Fonction utilitaire en dehors de l'objet
 const handleError = (error: any): Error => {
   if (error.response) {
     const message = error.response.data.message || 'An error occurred';
@@ -28,6 +34,16 @@ export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH.LOGIN, credentials);
+      localStorage.setItem('token', data.token);
+      return data;
+    } catch (error) {
+      throw handleError(error);
+    }
+  },
+
+  async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+    try {
+      const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH.REGISTER, credentials);
       localStorage.setItem('token', data.token);
       return data;
     } catch (error) {
