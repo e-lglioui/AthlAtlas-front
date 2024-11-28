@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { eventService } from '../services/event.service';
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Users, DollarSign, FileText } from 'lucide-react';
 import { motion } from "framer-motion";
 
 export function UpdateEventPage() {
@@ -99,115 +99,149 @@ export function UpdateEventPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="container mx-auto px-4 py-8"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4"
     >
-      <div className="mb-6 flex items-center justify-between">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(`/dashboard/events/${id}`)}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Event
-        </Button>
-      </div>
-
-      <Card className="max-w-2xl mx-auto">
-        <div className="p-6">
-          <Title className="mb-6">Update Event</Title>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Event Name</label>
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="Enter event name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
-              <Textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                required
-                placeholder="Enter event description"
-                rows={4}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start Date</label>
-                <Input
-                  type="datetime-local"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">End Date</label>
-                <Input
-                  type="datetime-local"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Price</label>
-                <Input
-                  type="number"
-                  name="prix"
-                  value={formData.prix}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Number of Participants</label>
-                <Input
-                  type="number"
-                  name="participantnbr"
-                  value={formData.participantnbr}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(`/dashboard/events/${id}`)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Updating...' : 'Update Event'}
-              </Button>
-            </div>
-          </form>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(`/dashboard/events/${id}`)}
+            className="hover:bg-white/50 transition-colors"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Event
+          </Button>
         </div>
-      </Card>
+
+        <Card className="bg-white shadow-xl">
+          <div className="p-8">
+            <Title className="text-2xl font-bold text-gray-900 mb-8">Update Event</Title>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="space-y-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FileText className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter event name"
+                    className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Description</label>
+                  <Textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter event description"
+                    rows={4}
+                    className="bg-gray-50 border-gray-200 focus:bg-white transition-colors resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      Start Date & Time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      required
+                      className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                      End Date & Time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      required
+                      className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-gray-500" />
+                      Price
+                    </label>
+                    <Input
+                      type="number"
+                      name="prix"
+                      value={formData.prix}
+                      onChange={handleChange}
+                      required
+                      min="0"
+                      step="0.01"
+                      className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-500" />
+                      Number of Participants
+                    </label>
+                    <Input
+                      type="number"
+                      name="participantnbr"
+                      value={formData.participantnbr}
+                      onChange={handleChange}
+                      required
+                      min="0"
+                      className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(`/dashboard/events/${id}`)}
+                  className="hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      Updating...
+                    </div>
+                  ) : (
+                    'Update Event'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Card>
+      </div>
     </motion.div>
   );
 } 
