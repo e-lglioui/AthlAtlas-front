@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
 import { setUser } from '@/features/auth/authSlice';
 import { authService } from '@/features/auth/services/auth.service';
+import { RegisterCredentials } from '@/features/auth/services/auth.service';
+import {  setLoading, setError } from '@/features/auth/authSlice';
+
 
 export function useAuth() {
   const dispatch = useAppDispatch();
@@ -34,12 +37,27 @@ export function useAuth() {
     navigate('/login');
   };
 
+  const register = async (credentials: RegisterCredentials) => {
+    try {
+      dispatch(setLoading(true));
+      dispatch(setError(null));
+      
+      const { user: userData }  = await authService.register(credentials);
+      dispatch(setUser(userData));
+      navigate('/login');
+    } catch (error: any) {
+      dispatch(setError(error.message));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+  
   return {
     user,
     isAuthenticated: authService.isAuthenticated(),
     login,
     logout,
-    // Ajout de getters pratiques
+    register,
     getUserId: () => user?.id,
     getUsername: () => user?.username
   };

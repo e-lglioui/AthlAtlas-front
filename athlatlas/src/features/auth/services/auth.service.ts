@@ -1,6 +1,21 @@
 import api from '@/services/api';
 import { storage } from '../../../utils/storage';
 import { jwtDecode } from "jwt-decode";
+import { ENDPOINTS } from '@/services/endpoints';
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+  username: string;
+  confirmPassword: string;
+}
+
+const handleError = (error: any): Error => {
+  if (error.response) {
+    const message = error.response.data.message || 'An error occurred';
+    return new Error(message);
+  }
+  return new Error('Network error');
+};
 
 interface LoginCredentials {
   email: string;
@@ -51,6 +66,35 @@ class AuthService {
     } catch (error) {
       console.error('Login error:', error);
       throw error;
+    }
+  }
+
+  async register(credentials: RegisterCredentials) {
+    try {
+      const { data } = await api.post<LoginResponse>(ENDPOINTS.AUTH.REGISTER, credentials);
+      console.log('Login response:', data);
+
+      if (!data.access_token) {
+        throw new Error('No token received');
+      }
+
+      // Décode le token pour obtenir les informations utilisateur
+      const decoded = jwtDecode<DecodedToken>(data.access_token);
+      console.log('Decoded token:', decoded);
+
+      // Crée l'objet utilisateur à partir des données du token
+      const user: User = {
+        id: decoded.sub,
+        username: decoded.username
+      };
+
+      // Stocke le token et les informations utilisateur
+      storage.setToken(data.access_token);
+      storage.setUser(user);
+
+      return { user, token: data.access_token };
+    } catch (error) {
+      throw handleError(error);
     }
   }
 
