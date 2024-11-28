@@ -18,7 +18,7 @@ export function CreateEventPage() {
     <div className="container mx-auto py-6">
       {user ? (
         <CreateEventForm 
-          userId={user._id}
+          userId={user.id}
           onSuccess={handleSuccess}
           onClose={handleClose}
         />

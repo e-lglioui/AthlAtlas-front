@@ -15,8 +15,7 @@ import { Toaster } from "@/components/ui/toaster";
 // Définition du type User
 interface User {
   id: string;
-  email: string;
-  name?: string;
+  username?: string;
 }
 
 const menuItems = [
@@ -52,6 +51,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
 
   return (
+    <>
     <div className="min-h-screen bg-gray-100">
       {/* Sidebar */}
       <aside
@@ -90,7 +90,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="border-t p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">{user?.email}</p>
+                <p className="text-sm font-medium">{user?.username}</p>
               </div>
               <Button
                 variant="ghost"
@@ -122,8 +122,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <Outlet />
         </main>
       </div>
-
-      <Toaster />
     </div>
+      <Toaster />
+    </>
   );
 } 

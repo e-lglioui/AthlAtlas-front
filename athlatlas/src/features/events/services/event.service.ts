@@ -1,6 +1,19 @@
 import api from '@/services/api';
 import { Event, CreateEventDto,UpdateEventDto } from '../types/event.types';
+import { AxiosError } from 'axios';
+
 const EVENTS_URL = '/events';
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode?: number,
+    public errors?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 export const eventService = {
   async getAllEvents() {
@@ -19,8 +32,23 @@ export const eventService = {
   },
 
   async createEvent(event: CreateEventDto) {
+    try{
     const { data } = await api.post<Event>(EVENTS_URL, event);
     return data;
+    }catch(error){
+      if (error instanceof AxiosError) {
+        const message = error.response?.data?.message 
+          || error.response?.data?.error 
+          || 'Failed to create event';
+          
+        throw new ApiError(
+          message,
+          error.response?.status,
+          error.response?.data?.errors
+        );
+      }
+      throw error;
+    }
   },
 
   async updateEvent(id: string, event: UpdateEventDto) {

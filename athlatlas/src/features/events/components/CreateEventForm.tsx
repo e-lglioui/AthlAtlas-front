@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,12 +36,8 @@ const createEventSchema = z.object({
   bio: z.string()
     .min(10, "Description must be at least 10 characters")
     .max(500, "Description must be less than 500 characters"),
-  participantnbr: z.number()
-    .min(1, "Must have at least 1 participant")
-    .max(10000, "Maximum 10000 participants"),
-  prix: z.number()
-    .min(0, "Price cannot be negative")
-    .max(100000, "Maximum price is 100000"),
+    participantnbr: z.string().transform((val) => parseInt(val, 10)), // Conversion en number
+    prix: z.string().transform((val) => parseFloat(val)), 
   startDate: z.string().refine(
     (date) => new Date(date) > new Date(),
     "Start date must be in the future"
@@ -82,7 +78,7 @@ export function CreateEventForm({ userId, onSuccess, onClose }: CreateEventFormP
     mode: "onChange", // Active la validation en temps réel
   });
 
-  // Observer les valeurs du formulaire pour la prévisualisation
+  
   const formValues = watch();
 
   const handleCancel = () => {
@@ -121,9 +117,10 @@ export function CreateEventForm({ userId, onSuccess, onClose }: CreateEventFormP
       onSuccess();
       onClose();
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create event";
       toast({
         title: "Error",
-        description: error.message || "Failed to create event",
+        description: Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage,
         variant: "destructive",
       });
     } finally {
