@@ -1,40 +1,33 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setUser, setLoading, setError } from '@/features/auth/authSlice';
-import { authService, LoginCredentials, RegisterCredentials } from '@/features/auth/services/auth.service';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
+import { setUser } from '@/features/auth/authSlice';
+import { authService } from '@/features/auth/services/auth.service';
+import { RegisterCredentials } from '@/features/auth/services/auth.service';
+import {  setLoading, setError } from '@/features/auth/authSlice';
 
-export const useAuth = () => {
+
+export function useAuth() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, error } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
 
-  const login = async (credentials: LoginCredentials) => {
-    try {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      
-      const response = await authService.login(credentials);
-      dispatch(setUser(response.user));
-      navigate('/dashboard');
-    } catch (error: any) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
+  // Initialise l'utilisateur au chargement
+  useEffect(() => {
+    const currentUser = authService.getCurrentUser();
+    if (currentUser && !user) {
+      dispatch(setUser(currentUser));
     }
-  };
+  }, [dispatch, user]);
 
-  const register = async (credentials: RegisterCredentials) => {
+  const login = async (credentials: { email: string; password: string }) => {
     try {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      
-      const response = await authService.register(credentials);
-      dispatch(setUser(response.user));
+      const { user: userData } = await authService.login(credentials);
+      dispatch(setUser(userData));
       navigate('/dashboard');
-    } catch (error: any) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   };
 
@@ -44,13 +37,28 @@ export const useAuth = () => {
     navigate('/login');
   };
 
+  const register = async (credentials: RegisterCredentials) => {
+    try {
+      dispatch(setLoading(true));
+      dispatch(setError(null));
+      
+      const { user: userData }  = await authService.register(credentials);
+      dispatch(setUser(userData));
+      navigate('/login');
+    } catch (error: any) {
+      dispatch(setError(error.message));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+  
   return {
     user,
-    isLoading,
-    error,
-    login,
-    register,
-    logout,
     isAuthenticated: authService.isAuthenticated(),
+    login,
+    logout,
+    register,
+    getUserId: () => user?.id,
+    getUsername: () => user?.username
   };
-};
+}
