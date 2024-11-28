@@ -6,6 +6,7 @@ import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { EventsListPage } from '@/features/events/pages/EventsListPage';
 import { CreateEventPage } from '@/features/events/pages/CreateEventPage';
 import { EventDetailPage } from '@/features/events/pages/EventDetailPage';
+import { UpdateEventPage } from '@/features/events/pages/UpdateEventPage';
 function App() {
   return (
     <Router>
@@ -21,6 +22,7 @@ function App() {
           <Route path="events" element={<EventsListPage />} />
           <Route path="events/create" element={<CreateEventPage />} />
           <Route path="events/:id" element={<EventDetailPage />} />
+          <Route path="events/edit/:id" element={<UpdateEventPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
