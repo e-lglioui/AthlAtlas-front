@@ -5,7 +5,7 @@ import { LoginForm } from '@/features/auth/components/LoginForm';
 import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { EventsListPage } from '@/features/events/pages/EventsListPage';
 import { CreateEventPage } from '@/features/events/pages/CreateEventPage';
-
+import { EventDetailPage } from '@/features/events/pages/EventDetailPage';
 function App() {
   return (
     <Router>
@@ -20,6 +20,7 @@ function App() {
           <Route index element={<Navigate to="events" replace />} />
           <Route path="events" element={<EventsListPage />} />
           <Route path="events/create" element={<CreateEventPage />} />
+          <Route path="events/:id" element={<EventDetailPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
