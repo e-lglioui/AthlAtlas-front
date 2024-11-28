@@ -25,7 +25,7 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-  const { register: registerUser, isLoading, error } = useAuth();
+  const { register: registerUser } = useAuth();
   
   const {
     register,
@@ -46,11 +46,7 @@ export function RegisterForm() {
           <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+      
           
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
@@ -104,9 +100,9 @@ export function RegisterForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading}
+              
             >
-              {isLoading ? "Creating Account..." : "Register"}
+            
             </Button>
           </form>
 

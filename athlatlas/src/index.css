@@ -117,3 +117,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ajoutez ces styles pour le scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ab5252;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d57777;
+}

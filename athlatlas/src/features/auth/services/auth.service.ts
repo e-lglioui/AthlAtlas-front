@@ -1,61 +1,90 @@
 import api from '@/services/api';
-import { ENDPOINTS } from '@/services/endpoints';
+import { storage } from '../../../utils/storage';
+import { jwtDecode } from "jwt-decode";
 
-export interface LoginCredentials {
+interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export interface RegisterCredentials {
-  email: string;
-  password: string;
+interface LoginResponse {
+  access_token: string;
+}
+
+interface DecodedToken {
+  sub: string;      // ID de l'utilisateur
+  username: string; // Nom d'utilisateur
+  exp: number;      // Expiration
+  iat: number;      // Issued at
+}
+
+interface User {
+  id: string;
   username: string;
-  confirmPassword: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
-}
+class AuthService {
+  async login(credentials: LoginCredentials) {
+    try {
+      const { data } = await api.post<LoginResponse>('/auth/login', credentials);
+      console.log('Login response:', data);
 
-const handleError = (error: any): Error => {
-  if (error.response) {
-    const message = error.response.data.message || 'An error occurred';
-    return new Error(message);
+      if (!data.access_token) {
+        throw new Error('No token received');
+      }
+
+      // Décode le token pour obtenir les informations utilisateur
+      const decoded = jwtDecode<DecodedToken>(data.access_token);
+      console.log('Decoded token:', decoded);
+
+      // Crée l'objet utilisateur à partir des données du token
+      const user: User = {
+        id: decoded.sub,
+        username: decoded.username
+      };
+
+      // Stocke le token et les informations utilisateur
+      storage.setToken(data.access_token);
+      storage.setUser(user);
+
+      return { user, token: data.access_token };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   }
-  return new Error('Network error');
-};
 
-export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  getCurrentUser(): User | null {
+    const token = storage.getToken();
+    if (!token) return null;
+
     try {
-      const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH.LOGIN, credentials);
-      localStorage.setItem('token', data.token);
-      return data;
-    } catch (error) {
-      throw handleError(error);
+      const decoded = jwtDecode<DecodedToken>(token);
+      return {
+        id: decoded.sub,
+        username: decoded.username
+      };
+    } catch {
+      return null;
     }
-  },
-
-  async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    try {
-      const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH.REGISTER, credentials);
-      localStorage.setItem('token', data.token);
-      return data;
-    } catch (error) {
-      throw handleError(error);
-    }
-  },
-
-  logout(): void {
-    localStorage.removeItem('token');
-  },
+  }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    const token = storage.getToken();
+    if (!token) return false;
+
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      const currentTime = Date.now() / 1000;
+      return decoded.exp > currentTime;
+    } catch {
+      return false;
+    }
   }
-}; 
+
+  logout() {
+    storage.clearAuth();
+  }
+}
+
+export const authService = new AuthService(); 
