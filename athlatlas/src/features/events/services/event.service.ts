@@ -154,4 +154,12 @@ export const eventService = {
       throw error;
     }
   },
+  async searchParticipants(searchTerm: string) {
+    const response = await api.get(`/participants/search?q=${searchTerm}`);
+    return response.data;
+  },
+  async addParticipantToEvent(eventId: string, participantId: string) {
+    const response = await api.post(`/events/${eventId}/participants/${participantId}`);
+    return response.data;
+  }
 }

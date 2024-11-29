@@ -431,7 +431,7 @@ export function EventDetailPage() {
 
                   
                 </div>
-
+                
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4 p-4 bg-white rounded-lg shadow-sm">
                     <div className="p-2 bg-orange-50 rounded-lg">
@@ -439,7 +439,7 @@ export function EventDetailPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-700">Available Tickets</p>
-                      <p className="text-gray-600">{event.participantnbr} spots left</p>
+                      <p className="text-gray-600">{event.ticketrestant} spots left</p>
                     </div>
                   </div>
 
@@ -453,6 +453,18 @@ export function EventDetailPage() {
                     </div>
                   </div>
                 </div>
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-4 p-4 bg-white rounded-lg shadow-sm">
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                      <Users className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-700">Participant</p>
+                      <p className="text-gray-600">{event.participantnbr} participants</p>
+                    </div>
+                  </div>
+
+                </div>
               </div>
 
               <div className="pt-6 border-t border-gray-100">
@@ -464,9 +476,10 @@ export function EventDetailPage() {
                           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all duration-300"
                           size="lg"
                           disabled={event.participantnbr === 0}
+                          onClick={() => navigate(`/dashboard/events/${event._id}/participants/search`)}
                         >
                           <UserPlus className="mr-2 h-5 w-5" />
-                          {event.participantnbr === 0 ? 'Sold Out' : 'Register Participant'}
+                          {event.participantnbr === 0 ? 'Sold Out' : 'Add Participant'}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[500px]">
