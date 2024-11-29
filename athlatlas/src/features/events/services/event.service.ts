@@ -117,5 +117,41 @@ export const eventService = {
     const response = await api.put(`/participants/${participantId}`, data);
     return response.data;
   },
+  async registerParticipant(eventId: string, participantData: any) {
+    try {
+      const dataToSend = {
+        ...participantData,
+        eventId: eventId
+      };
 
-}; 
+      console.log('Sending registration data:', dataToSend);
+
+      const response = await api.post('/participants', dataToSend, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Registration error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+
+        const message = error.response?.data?.message 
+          || error.response?.data?.error 
+          || 'Failed to register participant';
+        
+        throw new ApiError(
+          message,
+          error.response?.status,
+          error.response?.data?.errors
+        );
+      }
+      throw error;
+    }
+  },
+}

@@ -53,6 +53,16 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function EventDetailPage() {
   const { id } = useParams();
@@ -66,6 +76,16 @@ export function EventDetailPage() {
   const isOwner = user?.id === event?.userId;
   const [participants, setParticipants] = useState<any[]>([]);
   const [isLoadingParticipants, setIsLoadingParticipants] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [registerForm, setRegisterForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -89,12 +109,54 @@ export function EventDetailPage() {
     }
   };
 
-  const handleRegister = () => {
-    // Implémenter la logique d'inscription
-    toast({
-      title: "Success",
-      description: "Registration successful!",
+  const resetForm = () => {
+    setRegisterForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+
     });
+    setFormErrors({});
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
+    
+    try {
+      const formattedData = {
+        ...registerForm,
+        phone: registerForm.phone.trim(),
+        
+        eventId: event._id
+      };
+
+      console.log('Submitting data:', formattedData);
+
+      await eventService.registerParticipant(event._id, formattedData);
+      
+      toast({
+        title: "Success",
+        description: "Registration successful!",
+      });
+      setIsRegisterOpen(false);
+      resetForm();
+      loadParticipants();
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleShare = async () => {
@@ -396,17 +458,141 @@ export function EventDetailPage() {
               <div className="pt-6 border-t border-gray-100">
                 {isOwner ? (
                   <div className="space-y-4">
-                    <Button 
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                      size="lg"
-                      disabled={event.participantnbr === 0}
-                      onClick={handleRegister}
-                    >
-                      <UserPlus className="mr-2 h-5 w-5" />
-                      {event.participantnbr === 0 ? 'Sold Out' : 'Register Participant'}
-                    </Button>
+                    <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                          size="lg"
+                          disabled={event.participantnbr === 0}
+                        >
+                          <UserPlus className="mr-2 h-5 w-5" />
+                          {event.participantnbr === 0 ? 'Sold Out' : 'Register Participant'}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>Register for {event.name}</DialogTitle>
+                          <DialogDescription>
+                            Please fill in the participant's information
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <form onSubmit={handleRegister} className="space-y-4 mt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="firstName">
+                                First Name
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="firstName"
+                                value={registerForm.firstName}
+                                onChange={(e) => {
+                                  setRegisterForm(prev => ({
+                                    ...prev,
+                                    firstName: e.target.value
+                                  }));
+                                  if (formErrors.firstName) {
+                                    setFormErrors(prev => ({
+                                      ...prev,
+                                      firstName: ''
+                                    }));
+                                  }
+                                }}
+                                className={formErrors.firstName ? "border-red-500" : ""}
+                                required
+                              />
+                              {formErrors.firstName && (
+                                <p className="text-sm text-red-500 mt-1">{formErrors.firstName}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="lastName">Last Name</Label>
+                              <Input
+                                id="lastName"
+                                value={registerForm.lastName}
+                                onChange={(e) => setRegisterForm(prev => ({
+                                  ...prev,
+                                  lastName: e.target.value
+                                }))}
+                                required
+                              />
+                            </div>
+                          </div>
 
-                    <div className="grid grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">
+                              Email
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={registerForm.email}
+                              onChange={(e) => {
+                                setRegisterForm(prev => ({
+                                  ...prev,
+                                  email: e.target.value
+                                }));
+                                if (formErrors.email) {
+                                  setFormErrors(prev => ({
+                                    ...prev,
+                                    email: ''
+                                  }));
+                                }
+                              }}
+                              className={formErrors.email ? "border-red-500" : ""}
+                              required
+                            />
+                            {formErrors.email && (
+                              <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              type="tel"
+                              value={registerForm.phone}
+                              onChange={(e) => setRegisterForm(prev => ({
+                                ...prev,
+                                phone: e.target.value
+                              }))}
+                              required
+                            />
+                          </div>
+                          <div className="flex justify-end gap-3 mt-6">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setIsRegisterOpen(false);
+                                resetForm();
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={isSubmitting || Object.keys(formErrors).length > 0}
+                              className="bg-orange-500 hover:bg-orange-600 text-white"
+                            >
+                              {isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                  Registering...
+                                </div>
+                              ) : (
+                                'Register'
+                              )}
+                            </Button>
+                          </div>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                 
                       <Sheet>
                         <SheetTrigger asChild>
                           <Button 
@@ -516,50 +702,49 @@ export function EventDetailPage() {
                         </SheetContent>
                       </Sheet>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="outline"
-                            className="flex-1"
-                            disabled={isLoading}
-                          >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download List
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => handleDownload('pdf')}>
-                            <FileText className="mr-2 h-4 w-4 text-red-500" />
-                            Download as PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDownload('csv')}>
-                            <FileSpreadsheet className="mr-2 h-4 w-4 text-green-500" />
-                            Download as CSV
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleDownload('excel')}>
-                            <FileSpreadsheet className="mr-2 h-4 w-4 text-blue-500" />
-                            Download as Excel
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <Button 
-                        className="flex-1"
-                        variant="outline"
-                        onClick={() => navigate(`/dashboard/events/edit/${event._id}`)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Event
-                      </Button>
-                      <Button 
-                        className="flex-1"
-                        variant="destructive"
-                        onClick={() => setShowDeleteDialog(true)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          className="flex-1"
+                          disabled={isLoading}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download List
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                          <FileText className="mr-2 h-4 w-4 text-red-500" />
+                          Download as PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                          <FileSpreadsheet className="mr-2 h-4 w-4 text-green-500" />
+                          Download as CSV
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDownload('excel')}>
+                          <FileSpreadsheet className="mr-2 h-4 w-4 text-blue-500" />
+                          Download as Excel
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button 
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => navigate(`/dashboard/events/edit/${event._id}`)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Event
+                    </Button>
+                    <Button 
+                      className="flex-1"
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
                   </div>
                 ) : (
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
