@@ -21,6 +21,10 @@ import {
   Edit,
   Trash2,
   UserPlus,
+  MoreHorizontal,
+  Info,
+  FileText,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -33,6 +37,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function EventDetailPage() {
   const { id } = useParams();
@@ -44,6 +74,18 @@ export function EventDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const isOwner = user?.id === event?.userId;
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [isLoadingParticipants, setIsLoadingParticipants] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [registerForm, setRegisterForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -67,12 +109,54 @@ export function EventDetailPage() {
     }
   };
 
-  const handleRegister = () => {
-    // Implémenter la logique d'inscription
-    toast({
-      title: "Success",
-      description: "Registration successful!",
+  const resetForm = () => {
+    setRegisterForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+
     });
+    setFormErrors({});
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
+    
+    try {
+      const formattedData = {
+        ...registerForm,
+        phone: registerForm.phone.trim(),
+        
+        eventId: event._id
+      };
+
+      console.log('Submitting data:', formattedData);
+
+      await eventService.registerParticipant(event._id, formattedData);
+      
+      toast({
+        title: "Success",
+        description: "Registration successful!",
+      });
+      setIsRegisterOpen(false);
+      resetForm();
+      loadParticipants();
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleShare = async () => {
@@ -87,22 +171,13 @@ export function EventDetailPage() {
     }
   };
 
-  const handleDownloadParticipants = async () => {
+  const handleDownload = async (format: 'pdf' | 'csv' | 'excel') => {
     try {
-      // Implémentez la logique de téléchargement
-      const response = await eventService.downloadParticipants(event._id);
-      // Créez un lien de tléchargement
-      const url = window.URL.createObjectURL(new Blob([response]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `participants-${event.name}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
+      setIsLoading(true);
+      await eventService.downloadParticipants(event._id, format);
       toast({
         title: "Success",
-        description: "Participants list downloaded successfully",
+        description: `Participants list downloaded successfully in ${format.toUpperCase()} format`,
       });
     } catch (error) {
       toast({
@@ -110,6 +185,8 @@ export function EventDetailPage() {
         description: "Failed to download participants list",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,6 +202,59 @@ export function EventDetailPage() {
       toast({
         title: "Error",
         description: "Failed to delete event",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadParticipants = async () => {
+    if (!event?._id) return;
+    
+    setIsLoadingParticipants(true);
+    try {
+      const data = await eventService.getEventParticipants(event._id);
+      console.log('Participants loaded:', data); // Pour le debug
+      setParticipants(data);
+    } catch (error) {
+      console.error('Error loading participants:', error); // Pour le debug
+      toast({
+        title: "Error",
+        description: "Failed to load participants",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingParticipants(false);
+    }
+  };
+
+  const handleDeleteParticipant = async (participantId: string) => {
+    try {
+      await eventService.deleteParticipant(event._id, participantId);
+      toast({
+        title: "Success",
+        description: "Participant removed successfully",
+      });
+      loadParticipants(); // Recharger la liste
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove participant",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadTicket = async (participantId: string) => {
+    try {
+      await eventService.downloadTicket(event._id, participantId);
+      toast({
+        title: "Success",
+        description: "Ticket downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download ticket",
         variant: "destructive",
       });
     }
@@ -189,14 +319,33 @@ export function EventDetailPage() {
 
             {isOwner && (
               <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleDownloadParticipants}
-                  title="Download participants list"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      className="flex-1"
+                      disabled={isLoading}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download List
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                      <FileText className="mr-2 h-4 w-4 text-red-500" />
+                      Download as PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                      <FileSpreadsheet className="mr-2 h-4 w-4 text-green-500" />
+                      Download as CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleDownload('excel')}>
+                      <FileSpreadsheet className="mr-2 h-4 w-4 text-blue-500" />
+                      Download as Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="outline"
                   size="icon"
@@ -263,7 +412,7 @@ export function EventDetailPage() {
                     <div>
                       <p className="font-semibold text-gray-700">Date</p>
                       <p className="text-gray-600">
-                        {format(new Date(event.startDate), 'EEEE, MMMM d, yyyy')}
+                        {format(new Date(event.startDate), 'd, MMMM , yyyy,h:mm a')}
                       </p>
                     </div>
                   </div>
@@ -275,23 +424,14 @@ export function EventDetailPage() {
                     <div>
                       <p className="font-semibold text-gray-700">Time</p>
                       <p className="text-gray-600">
-                        {format(new Date(event.startDate), 'h:mm a')} - 
-                        {format(new Date(event.endDate), 'h:mm a')}
+                      {format(new Date(event.endDate), 'd, MMMM , yyyy,h:mm a')}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4 p-4 bg-white rounded-lg shadow-sm">
-                    <div className="p-2 bg-purple-50 rounded-lg">
-                      <MapPin className="h-6 w-6 text-purple-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-700">Location</p>
-                      <p className="text-gray-600">Event Location</p>
-                    </div>
-                  </div>
+                  
                 </div>
-
+                
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4 p-4 bg-white rounded-lg shadow-sm">
                     <div className="p-2 bg-orange-50 rounded-lg">
@@ -299,7 +439,7 @@ export function EventDetailPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-700">Available Tickets</p>
-                      <p className="text-gray-600">{event.participantnbr} spots left</p>
+                      <p className="text-gray-600">{event.ticketrestant} spots left</p>
                     </div>
                   </div>
 
@@ -313,47 +453,311 @@ export function EventDetailPage() {
                     </div>
                   </div>
                 </div>
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-4 p-4 bg-white rounded-lg shadow-sm">
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                      <Users className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-700">Participant</p>
+                      <p className="text-gray-600">{event.participantnbr} participants</p>
+                    </div>
+                  </div>
+
+                </div>
               </div>
 
               <div className="pt-6 border-t border-gray-100">
                 {isOwner ? (
                   <div className="space-y-4">
-                    <Button 
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                      size="lg"
-                      disabled={event.participantnbr === 0}
-                      onClick={handleRegister}
-                    >
-                      <UserPlus className="mr-2 h-5 w-5" />
-                      {event.participantnbr === 0 ? 'Sold Out' : 'Register Participant'}
-                    </Button>
+                    <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                          size="lg"
+                          disabled={event.participantnbr === 0}
+                          onClick={() => navigate(`/dashboard/events/${event._id}/participants/search`)}
+                        >
+                          <UserPlus className="mr-2 h-5 w-5" />
+                          {event.participantnbr === 0 ? 'Sold Out' : 'Add Participant'}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>Register for {event.name}</DialogTitle>
+                          <DialogDescription>
+                            Please fill in the participant's information
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <form onSubmit={handleRegister} className="space-y-4 mt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="firstName">
+                                First Name
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="firstName"
+                                value={registerForm.firstName}
+                                onChange={(e) => {
+                                  setRegisterForm(prev => ({
+                                    ...prev,
+                                    firstName: e.target.value
+                                  }));
+                                  if (formErrors.firstName) {
+                                    setFormErrors(prev => ({
+                                      ...prev,
+                                      firstName: ''
+                                    }));
+                                  }
+                                }}
+                                className={formErrors.firstName ? "border-red-500" : ""}
+                                required
+                              />
+                              {formErrors.firstName && (
+                                <p className="text-sm text-red-500 mt-1">{formErrors.firstName}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="lastName">Last Name</Label>
+                              <Input
+                                id="lastName"
+                                value={registerForm.lastName}
+                                onChange={(e) => setRegisterForm(prev => ({
+                                  ...prev,
+                                  lastName: e.target.value
+                                }))}
+                                required
+                              />
+                            </div>
+                          </div>
 
-                    <div className="grid grid-cols-3 gap-4">
-                      <Button 
-                        className="flex-1"
-                        variant="outline"
-                        onClick={handleDownloadParticipants}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download List
-                      </Button>
-                      <Button 
-                        className="flex-1"
-                        variant="outline"
-                        onClick={() => navigate(`/dashboard/events/edit/${event._id}`)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Event
-                      </Button>
-                      <Button 
-                        className="flex-1"
-                        variant="destructive"
-                        onClick={() => setShowDeleteDialog(true)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">
+                              Email
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={registerForm.email}
+                              onChange={(e) => {
+                                setRegisterForm(prev => ({
+                                  ...prev,
+                                  email: e.target.value
+                                }));
+                                if (formErrors.email) {
+                                  setFormErrors(prev => ({
+                                    ...prev,
+                                    email: ''
+                                  }));
+                                }
+                              }}
+                              className={formErrors.email ? "border-red-500" : ""}
+                              required
+                            />
+                            {formErrors.email && (
+                              <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              type="tel"
+                              value={registerForm.phone}
+                              onChange={(e) => setRegisterForm(prev => ({
+                                ...prev,
+                                phone: e.target.value
+                              }))}
+                              required
+                            />
+                          </div>
+                          <div className="flex justify-end gap-3 mt-6">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setIsRegisterOpen(false);
+                                resetForm();
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={isSubmitting || Object.keys(formErrors).length > 0}
+                              className="bg-orange-500 hover:bg-orange-600 text-white"
+                            >
+                              {isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                  Registering...
+                                </div>
+                              ) : (
+                                'Register'
+                              )}
+                            </Button>
+                          </div>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                 
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button 
+                            className="flex-1"
+                            variant="outline"
+                            onClick={loadParticipants}
+                          >
+                            <Users className="mr-2 h-4 w-4" />
+                            View Participants
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent className="w-[400px] sm:w-[540px]">
+                          <SheetHeader>
+                            <SheetTitle>Event Participants</SheetTitle>
+                            <SheetDescription>
+                              List of all registered participants for this event
+                            </SheetDescription>
+                          </SheetHeader>
+                          
+                          {isLoadingParticipants ? (
+                            <div className="flex justify-center items-center h-40">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                            </div>
+                          ) : (
+                            <div className="mt-6">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>firstName</TableHead>
+                                    <TableHead>lastName</TableHead>
+                                    <TableHead>email</TableHead>
+                                    <TableHead>more information</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {participants && participants.length > 0 ? (
+                                    participants.map((participant: any) => (
+                                      <TableRow key={participant._id}>
+                                        <TableCell>{participant.firstName}</TableCell>
+                                        <TableCell>{participant.lastName}</TableCell>
+                                        <TableCell>{participant.email}</TableCell>
+                                        <TableCell>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Open menu</span>
+                                                <MoreHorizontal className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  toast({
+                                                    title: "Participant Information",
+                                                    description: (
+                                                      <div className="mt-2 space-y-2">
+                                                        <p><strong>Name:</strong> {participant.firstName} {participant.lastName}</p>
+                                                        <p><strong>Email:</strong> {participant.email}</p>
+                                                        <p><strong>Registration Date:</strong> {
+                                                          participant.registrationDate ? 
+                                                            format(new Date(participant.registrationDate), 'PP') : 
+                                                            'N/A'
+                                                        }</p>
+                                                        {/* Ajoutez d'autres informations selon vos besoins */}
+                                                      </div>
+                                                    ),
+                                                    duration: 5000,
+                                                  });
+                                                }}
+                                              >
+                                                <Info className="mr-2 h-4 w-4" />
+                                                View Details
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => handleDownloadTicket(participant._id)}>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Download Ticket
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem 
+                                                onClick={() => navigate(`/dashboard/events/${event._id}/participants/edit/${participant._id}`)}
+                                              >
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Edit Participant
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                className="text-red-600"
+                                                onClick={() => handleDeleteParticipant(participant._id)}
+                                              >
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Remove Participant
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))
+                                  ) : (
+                                    <TableRow>
+                                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                                        No participants registered yet
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          )}
+                        </SheetContent>
+                      </Sheet>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          className="flex-1"
+                          disabled={isLoading}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download List
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                          <FileText className="mr-2 h-4 w-4 text-red-500" />
+                          Download as PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                          <FileSpreadsheet className="mr-2 h-4 w-4 text-green-500" />
+                          Download as CSV
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDownload('excel')}>
+                          <FileSpreadsheet className="mr-2 h-4 w-4 text-blue-500" />
+                          Download as Excel
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button 
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => navigate(`/dashboard/events/edit/${event._id}`)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Event
+                    </Button>
+                    <Button 
+                      className="flex-1"
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
                   </div>
                 ) : (
                   <div className="text-center p-4 bg-gray-50 rounded-lg">

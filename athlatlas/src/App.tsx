@@ -7,6 +7,10 @@ import { EventsListPage } from '@/features/events/pages/EventsListPage';
 import { CreateEventPage } from '@/features/events/pages/CreateEventPage';
 import { EventDetailPage } from '@/features/events/pages/EventDetailPage';
 import { UpdateEventPage } from '@/features/events/pages/UpdateEventPage';
+import { UpdateParticipantPage } from '@/features/events/pages/UpdateParticipantPage';
+import { ParticipantSearchPage } from '@/features/events/pages/ParticipantSearchPage';
+import { RegisterParticipantPage } from '@/features/events/pages/RegisterParticipantPage';
+
 function App() {
   return (
     <Router>
@@ -23,6 +27,9 @@ function App() {
           <Route path="events/create" element={<CreateEventPage />} />
           <Route path="events/:id" element={<EventDetailPage />} />
           <Route path="events/edit/:id" element={<UpdateEventPage />} />
+          <Route path="events/:eventId/participants/edit/:participantId" element={<UpdateParticipantPage />} />
+          <Route path="events/:eventId/participants/search" element={<ParticipantSearchPage />} />
+          <Route path="events/:eventId/participants/new" element={<RegisterParticipantPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

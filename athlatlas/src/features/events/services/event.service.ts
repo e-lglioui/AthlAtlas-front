@@ -1,3 +1,4 @@
+import FileSaver from 'file-saver';
 import api from '@/services/api';
 import { Event, CreateEventDto,UpdateEventDto } from '../types/event.types';
 import { AxiosError } from 'axios';
@@ -61,17 +62,104 @@ export const eventService = {
     return data;
   },
 
-  async exportParticipants(id: string) {
-    const response = await api.get(`${EVENTS_URL}/${id}/registrations/export`, {
-      responseType: 'blob'
-    });
-    
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `event-${id}-participants.csv`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  async downloadParticipants(eventId: string, format: 'pdf' | 'csv' | 'excel' = 'pdf') {
+    try {
+      const response = await api.get(`${EVENTS_URL}/${eventId}/participants/export`, {
+        params: { format },
+        responseType: 'blob'
+      });
+
+      const contentType = response.headers['content-type'];
+      let fileExtension;
+      
+      switch (format) {
+        case 'pdf':
+          fileExtension = 'pdf';
+          break;
+        case 'csv':
+          fileExtension = 'csv';
+          break;
+        case 'excel':
+          fileExtension = 'xlsx';
+          break;
+        default:
+          fileExtension = 'pdf';
+      }
+
+      FileSaver.saveAs(
+        new Blob([response.data], { type: contentType }), 
+        `event-${eventId}-participants.${fileExtension}`
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Download error:', error);
+      throw new Error('Failed to download participants list');
+    }
+  },
+  async getEventParticipants(eventId: string) {
+    try {
+      const response = await api.get(`${EVENTS_URL}/${eventId}/participants`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async deleteParticipant(eventId: string, participantId: string) {
+    const response = await api.delete(`/participants/${participantId}${EVENTS_URL}/${eventId}`);
+    return response.data;
+  },
+  async getParticipant(eventId: string, participantId: string) {
+    const response = await api.get(`/participants/${participantId}`);
+    return response.data;
+  },
+   async updateParticipant(eventId: string, participantId: string, data: any) {
+    const response = await api.put(`/participants/${participantId}`, data);
+    return response.data;
+  },
+  async registerParticipant(eventId: string, participantData: any) {
+    try {
+      const dataToSend = {
+        ...participantData,
+        eventId: eventId
+      };
+
+      console.log('Sending registration data:', dataToSend);
+
+      const response = await api.post('/participants', dataToSend, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Registration error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+
+        const message = error.response?.data?.message 
+          || error.response?.data?.error 
+          || 'Failed to register participant';
+        
+        throw new ApiError(
+          message,
+          error.response?.status,
+          error.response?.data?.errors
+        );
+      }
+      throw error;
+    }
+  },
+  async searchParticipants(searchTerm: string) {
+    const response = await api.get(`/participants/search?q=${searchTerm}`);
+    return response.data;
+  },
+  async addParticipantToEvent(eventId: string, participantId: string) {
+    const response = await api.post(`/events/${eventId}/participants/${participantId}`);
+    return response.data;
   }
-}; 
+}
