@@ -155,11 +155,11 @@ export const eventService = {
     }
   },
   async searchParticipants(searchTerm: string) {
-    const response = await api.get(`/participants/search?q=${searchTerm}`);
+    const response = await api.get(`/participants/search/name?q=${searchTerm}`);
     return response.data;
   },
   async addParticipantToEvent(eventId: string, participantId: string) {
-    const response = await api.post(`/events/${eventId}/participants/${participantId}`);
+    const response = await api.post(`/participants/${participantId}/events/${eventId}`);
     return response.data;
   }
 }

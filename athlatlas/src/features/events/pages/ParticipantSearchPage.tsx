@@ -106,7 +106,7 @@ export function ParticipantSearchPage() {
                   <p className="text-sm text-gray-500">{participant.email}</p>
                 </div>
                 <Button
-                  onClick={() => handleAddExistingParticipant(participant._id)}
+                  onClick={() => handleAddExistingParticipant(participant.id)}
                 >
                   Add to Event
                 </Button>

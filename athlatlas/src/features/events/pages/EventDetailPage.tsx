@@ -244,22 +244,6 @@ export function EventDetailPage() {
     }
   };
 
-  const handleDownloadTicket = async (participantId: string) => {
-    try {
-      await eventService.downloadTicket(event._id, participantId);
-      toast({
-        title: "Success",
-        description: "Ticket downloaded successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to download ticket",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -679,10 +663,7 @@ export function EventDetailPage() {
                                                 <Info className="mr-2 h-4 w-4" />
                                                 View Details
                                               </DropdownMenuItem>
-                                              <DropdownMenuItem onClick={() => handleDownloadTicket(participant._id)}>
-                                                <Download className="mr-2 h-4 w-4" />
-                                                Download Ticket
-                                              </DropdownMenuItem>
+                      
                                               <DropdownMenuItem 
                                                 onClick={() => navigate(`/dashboard/events/${event._id}/participants/edit/${participant._id}`)}
                                               >
