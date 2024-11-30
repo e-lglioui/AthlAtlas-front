@@ -648,15 +648,13 @@ export function EventDetailPage() {
                                                       <div className="mt-2 space-y-2">
                                                         <p><strong>Name:</strong> {participant.firstName} {participant.lastName}</p>
                                                         <p><strong>Email:</strong> {participant.email}</p>
-                                                        <p><strong>Registration Date:</strong> {
-                                                          participant.registrationDate ? 
-                                                            format(new Date(participant.registrationDate), 'PP') : 
-                                                            'N/A'
-                                                        }</p>
-                                                        {/* Ajoutez d'autres informations selon vos besoins */}
+                                                        <p><strong>Registration Date:</strong> 
+                                                          {participant.phone}
+                                                    </p>
+                                                        
                                                       </div>
                                                     ),
-                                                    duration: 5000,
+                                                    duration: 10000,
                                                   });
                                                 }}
                                               >
@@ -665,14 +663,14 @@ export function EventDetailPage() {
                                               </DropdownMenuItem>
                       
                                               <DropdownMenuItem 
-                                                onClick={() => navigate(`/dashboard/events/${event._id}/participants/edit/${participant._id}`)}
+                                                onClick={() => navigate(`/dashboard/events/${event._id}/participants/edit/${participant.id}`)}
                                               >
                                                 <Edit className="mr-2 h-4 w-4" />
                                                 Edit Participant
                                               </DropdownMenuItem>
                                               <DropdownMenuItem
                                                 className="text-red-600"
-                                                onClick={() => handleDeleteParticipant(participant._id)}
+                                                onClick={() => handleDeleteParticipant(participant.id)}
                                               >
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Remove Participant
