@@ -20,25 +20,21 @@ interface User {
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Statistics",
     icon: LayoutDashboard,
     path: "/dashboard",
   },
   {
-    title: "Events",
+    title: "All Events",
     icon: Calendar,
     path: "/dashboard/events",
   },
   {
-    title: "Users",
-    icon: Users,
-    path: "/dashboard/users",
+    title: "My Events",
+    icon: Calendar,
+    path: "/dashboard/my-events",
   },
-  {
-    title: "Settings",
-    icon: Settings,
-    path: "/dashboard/settings",
-  },
+ 
 ];
 
 interface DashboardLayoutProps {
@@ -62,7 +58,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center justify-center border-b">
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-xl font-bold">Dashboard</h1>
           </div>
 
           {/* Navigation */}

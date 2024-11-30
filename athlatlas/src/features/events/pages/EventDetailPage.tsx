@@ -742,6 +742,7 @@ export function EventDetailPage() {
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <p className="text-gray-600">
                       Contact the event organizer for registration details
+                    
                     </p>
                   </div>
                 )}

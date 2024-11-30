@@ -161,5 +161,9 @@ export const eventService = {
   async addParticipantToEvent(eventId: string, participantId: string) {
     const response = await api.post(`/participants/${participantId}/events/${eventId}`);
     return response.data;
+  },
+  async getEventsByUserId(userId: string) {
+    const response = await api.get(`/events/user/${userId}`);
+    return response.data;
   }
 }

@@ -10,7 +10,8 @@ import { UpdateEventPage } from '@/features/events/pages/UpdateEventPage';
 import { UpdateParticipantPage } from '@/features/events/pages/UpdateParticipantPage';
 import { ParticipantSearchPage } from '@/features/events/pages/ParticipantSearchPage';
 import { RegisterParticipantPage } from '@/features/events/pages/RegisterParticipantPage';
-
+import {MyEventsPage}from '@/features/events/pages/MyEventsPage'
+import {DashboardHome}from '@/features/dashboard/pages/DashboardHome'
 function App() {
   return (
     <Router>
@@ -22,7 +23,9 @@ function App() {
             <DashboardLayout />
            </PrivateRoute> 
         }>
-          <Route index element={<Navigate to="events" replace />} />
+          <Route index element={<Navigate to="statistiques" replace />} />
+          <Route path="statistiques" element={<DashboardHome />} />
+          <Route path="my-events" element={<MyEventsPage/>} />
           <Route path="events" element={<EventsListPage />} />
           <Route path="events/create" element={<CreateEventPage />} />
           <Route path="events/:id" element={<EventDetailPage />} />
