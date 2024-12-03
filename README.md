@@ -41,7 +41,12 @@ REACT_APP_JWT_SECRET=your_jwt_secret_key
 ```bash
 npm start
 ```
-### **6. Tester l'application**
-```bash
-npm run test
+### **6 Construire l'image Docker :**
+```bash 
+docker build -t athlatlas .
 ```
+### **7 Exécuter le conteneur **
+```bash
+docker run -p 3000:80 athlatlas
+```
+
